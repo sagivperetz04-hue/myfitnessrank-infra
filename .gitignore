@@ -1,0 +1,10 @@
+.terraform/
+.terragrunt-cache/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+!*.auto.tfvars
+.terraform.lock.hcl.backup
