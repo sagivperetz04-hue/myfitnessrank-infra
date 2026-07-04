@@ -19,7 +19,7 @@ dependency "ecr" {
 
 inputs = {
   role_name         = "myfitnessrank-github-ci"
-  github_repository = "sagivperetz04-hue/myfitnessrank-app"
+  github_repository = "sagivperetz04-hue/myfitnessrank"
 
   ecr_repository_arns = values(dependency.ecr.outputs.repository_arns)
 }
