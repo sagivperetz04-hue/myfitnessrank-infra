@@ -11,7 +11,5 @@ terraform {
 }
 
 inputs = {
-  # REPLACE-ME: set the purchased domain, e.g. "myfitnessrank.com".
-  # startinfra.sh refuses to run while this placeholder is present.
-  domain = "REPLACE-ME.example"
+  domain = "myfitnessrank.fitness"
 }
