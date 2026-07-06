@@ -1,0 +1,31 @@
+include "root" {
+  path = find_in_parent_folders("root.hcl")
+}
+
+terraform {
+  source = "${get_repo_root()}/modules/ingress-nginx"
+}
+
+dependency "eks" {
+  config_path = "../eks"
+
+  mock_outputs = {
+    cluster_name = "myfitnessrank"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "acm" {
+  config_path = "../acm"
+
+  mock_outputs = {
+    certificate_arn = "arn:aws:acm:us-east-1:000000000000:certificate/mock"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+inputs = {
+  cluster_name    = dependency.eks.outputs.cluster_name
+  chart_version   = "4.15.1"
+  certificate_arn = dependency.acm.outputs.certificate_arn
+}

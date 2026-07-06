@@ -10,4 +10,5 @@ echo
 terragrunt run --all --non-interactive destroy
 
 echo
-echo "==> Done. Nothing left billing except pennies for S3 state storage."
+echo "==> Done. Nothing left billing except pennies for S3 state and the Route53"
+echo "    hosted zone (~\$0.50/mo) — kept so the registrar NS delegation stays valid."
