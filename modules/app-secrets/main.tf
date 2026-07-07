@@ -31,6 +31,28 @@ provider "kubernetes" {
   }
 }
 
+# Default StorageClass for the cluster. EKS 1.36 drops the in-tree
+# kubernetes.io/aws-ebs provisioner (the vestigial gp2 class is dead), and the
+# EBS CSI addon ships no default class — so the app's postgres PVCs, which set
+# no storageClassName, have nothing to bind to. Provide an encrypted gp3 class
+# via the CSI driver and mark it default. WaitForFirstConsumer keeps the volume
+# in the same AZ as the pod that triggers it.
+resource "kubernetes_storage_class" "gp3_default" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner    = "ebs.csi.aws.com"
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+  parameters = {
+    type      = "gp3"
+    encrypted = "true"
+  }
+}
+
 locals {
   namespaces = [for env in var.environments : "myfitnessrank-${env}"]
 
