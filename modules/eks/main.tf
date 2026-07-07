@@ -15,8 +15,19 @@ module "eks" {
     coredns                = {}
     kube-proxy             = {}
     eks-pod-identity-agent = { before_compute = true }
-    vpc-cni                = { before_compute = true }
-    aws-ebs-csi-driver     = {}
+    # Prefix delegation: assign /28 blocks instead of single IPs so a node's
+    # pod ceiling comes from ENI prefixes, not the ~17-IP cap of a t3.medium.
+    # before_compute keeps this active before nodes join so they boot in prefix mode.
+    vpc-cni = {
+      before_compute = true
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
+    }
+    aws-ebs-csi-driver = {}
   }
 
   eks_managed_node_groups = {
@@ -27,6 +38,22 @@ module "eks" {
       min_size     = var.node_min
       max_size     = var.node_max
       desired_size = var.node_desired
+
+      # Managed nodes still bootstrap with the non-prefix max-pods (17 on
+      # t3.medium), so prefix delegation alone leaves the ceiling unchanged.
+      # Set it explicitly. 58 gives ~2x headroom over current demand without
+      # letting a 4 GiB node pack toward memory exhaustion.
+      cloudinit_pre_nodeadm = [{
+        content_type = "application/node.eks.aws"
+        content      = <<-EOT
+          apiVersion: node.eks.aws/v1alpha1
+          kind: NodeConfig
+          spec:
+            kubelet:
+              config:
+                maxPods: 58
+        EOT
+      }]
     }
   }
 }
