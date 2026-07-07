@@ -13,7 +13,9 @@ dependency "dns" {
     zone_id = "Z00000000000000000000"
     domain  = "mock.example"
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  # destroy included so teardown of a partially-applied stack (ingress not up)
+  # can still resolve these and no-op instead of aborting the whole run.
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
 }
 
 dependency "ingress" {
@@ -22,7 +24,7 @@ dependency "ingress" {
   mock_outputs = {
     load_balancer_hostname = "mock.elb.us-east-1.amazonaws.com"
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
 }
 
 inputs = {
