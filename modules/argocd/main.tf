@@ -38,37 +38,45 @@ resource "helm_release" "argocd" {
     controller = { replicas = 1 }
     server     = { replicas = 1 }
     repoServer = { replicas = 1 }
+  })]
+}
 
-    # Terraform's only Kubernetes-facing job ends here: it plants the root
-    # Application, and every workload from this point on is pulled from git by
-    # ArgoCD (full GitOps). The app repo is public — no repo credential needed.
-    extraObjects = [
-      {
-        apiVersion = "argoproj.io/v1alpha1"
-        kind       = "Application"
-        metadata = {
-          name      = "myfitnessrank-root"
+# Terraform's only Kubernetes-facing job ends here: it plants the root
+# Application, and every workload from this point on is pulled from git by
+# ArgoCD (full GitOps). The app repo is public — no repo credential needed.
+# Separate release because Helm validates all of a release's objects against
+# the API server before applying anything, so an Application CR can't ship in
+# the same release that installs the Application CRD.
+resource "helm_release" "root_app" {
+  name       = "argocd-root"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argocd-apps"
+  version    = var.apps_chart_version
+  namespace  = "argocd"
+  wait       = true
+
+  values = [yamlencode({
+    applications = {
+      myfitnessrank-root = {
+        project = "default"
+        source = {
+          repoURL        = var.gitops_repo_url
+          targetRevision = var.gitops_revision
+          path           = var.gitops_path
+        }
+        destination = {
+          server    = "https://kubernetes.default.svc"
           namespace = "argocd"
         }
-        spec = {
-          project = "default"
-          source = {
-            repoURL        = var.gitops_repo_url
-            targetRevision = var.gitops_revision
-            path           = var.gitops_path
-          }
-          destination = {
-            server    = "https://kubernetes.default.svc"
-            namespace = "argocd"
-          }
-          syncPolicy = {
-            automated = {
-              prune    = true
-              selfHeal = true
-            }
+        syncPolicy = {
+          automated = {
+            prune    = true
+            selfHeal = true
           }
         }
       }
-    ]
+    }
   })]
+
+  depends_on = [helm_release.argocd]
 }

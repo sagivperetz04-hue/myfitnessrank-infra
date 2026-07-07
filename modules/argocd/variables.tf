@@ -8,6 +8,11 @@ variable "chart_version" {
   type        = string
 }
 
+variable "apps_chart_version" {
+  description = "argocd-apps chart version (plants the root Application)"
+  type        = string
+}
+
 variable "gitops_repo_url" {
   description = "Git repo ArgoCD pulls all workloads from (the app repo)"
   type        = string

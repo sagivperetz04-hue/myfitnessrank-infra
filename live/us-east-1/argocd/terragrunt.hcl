@@ -16,8 +16,9 @@ dependency "eks" {
 }
 
 inputs = {
-  cluster_name  = dependency.eks.outputs.cluster_name
-  chart_version = "10.1.2"
+  cluster_name       = dependency.eks.outputs.cluster_name
+  chart_version      = "10.1.2"
+  apps_chart_version = "2.0.5"
 
   # Root Application: this cluster runs staging + prod, synced from the app
   # repo's aws app-of-apps. Dev stays on local kind (deploy/argocd/local).
