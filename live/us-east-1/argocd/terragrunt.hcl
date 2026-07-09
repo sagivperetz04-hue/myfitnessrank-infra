@@ -25,6 +25,14 @@ dependency "app_secrets" {
   skip_outputs = true
 }
 
+# Ordering only: the ExternalSecret CRDs and the operator must exist before
+# ArgoCD syncs the app-secrets Application that uses them. On destroy, ArgoCD
+# (and its ExternalSecrets) go first, so ESO can still clean up finalizers.
+dependency "external_secrets" {
+  config_path  = "../external-secrets"
+  skip_outputs = true
+}
+
 inputs = {
   cluster_name       = dependency.eks.outputs.cluster_name
   chart_version      = "10.1.2"
